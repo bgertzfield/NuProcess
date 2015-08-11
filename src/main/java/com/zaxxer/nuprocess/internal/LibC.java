@@ -17,8 +17,10 @@
 package com.zaxxer.nuprocess.internal;
 
 import com.sun.jna.Callback;
+import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
+import com.sun.jna.Platform;
 import com.sun.jna.Pointer;
 import com.sun.jna.StringArray;
 import com.sun.jna.ptr.IntByReference;
@@ -76,8 +78,20 @@ public class LibC
 
    public static native Pointer signal(int signal, Pointer func);
 
+   public static native String getcwd(Pointer buf, int size);
+
+   public interface SyscallLibrary extends Library {
+     int syscall(int syscall_number, Object... args);
+   }
+
+  public static SyscallLibrary SYSCALL = (SyscallLibrary) Native.loadLibrary(
+      (Platform.isWindows() ? "msvcrt" : "c"),
+      SyscallLibrary.class);
+
    public static final int F_GETFL = 3;
    public static final int F_SETFL = 4;
+
+   public static final int SYS___pthread_chdir = 348;
 
    public static final int O_NONBLOCK;
 

@@ -19,6 +19,7 @@
  */
 package com.zaxxer.nuprocess.windows;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import com.zaxxer.nuprocess.NuProcess;
@@ -34,10 +35,10 @@ public class WinProcessFactory implements NuProcessFactory
 {
    /** {@inheritDoc} */
    @Override
-   public NuProcess createProcess(List<String> commands, String[] env, NuProcessHandler processListener)
+   public NuProcess createProcess(List<String> commands, String[] env, NuProcessHandler processListener, Path directory)
    {
       WindowsProcess process = new WindowsProcess(processListener);
-      process.start(commands, env);
+      process.start(commands, env, directory);
       return process;
    }
 }

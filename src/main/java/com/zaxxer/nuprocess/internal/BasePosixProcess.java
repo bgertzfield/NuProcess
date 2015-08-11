@@ -22,6 +22,7 @@ import static com.zaxxer.nuprocess.internal.LibC.WIFSIGNALED;
 import static com.zaxxer.nuprocess.internal.LibC.WTERMSIG;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -224,7 +225,7 @@ public abstract class BasePosixProcess implements NuProcess
    //                             Public methods
    // ************************************************************************
 
-   public NuProcess start(List<String> command, String[] environment)
+  public NuProcess start(List<String> command, String[] environment, Path path)
    {
       callPreStart();
       
@@ -239,6 +240,19 @@ public abstract class BasePosixProcess implements NuProcess
       }
       else {
          posix_spawnattr = new Memory(Pointer.SIZE);
+      }
+
+      Pointer cwd = null;
+      if (path != null && IS_MAC) {
+        int cwdBufSize = 1024;
+        long peer = Native.malloc(cwdBufSize);
+        cwd = new Pointer(peer);
+        String oldCwd = LibC.getcwd(cwd, cwdBufSize);
+        String newCwd = path.toAbsolutePath().toString();
+        System.err.format("Old CWD: %s New CWD: %s\n", oldCwd, newCwd);
+        int rc = LibC.SYSCALL.syscall(LibC.SYS___pthread_chdir, newCwd);
+        System.err.format("pthread chdir rc: %d\n", rc);
+        checkReturnCode(rc, "Internal call to syscall(SYS__pthread_chdir) failed");
       }
 
       try {
@@ -287,6 +301,14 @@ public abstract class BasePosixProcess implements NuProcess
 
          checkReturnCode(rc, "Invocation of posix_spawn() failed");
 
+         if (cwd != null && IS_MAC) {
+           rc = LibC.SYSCALL.syscall(LibC.SYS___pthread_chdir, cwd);
+           System.err.format("Restored cwd, rc %d\n", rc);
+           checkReturnCode(rc, "Internal call to syscall(SYS__pthread_chdir) failed");
+           Native.free(Pointer.nativeValue(cwd));
+           cwd = null;
+         }
+
          afterStart();
 
          registerProcess();
@@ -316,6 +338,13 @@ public abstract class BasePosixProcess implements NuProcess
          if (IS_LINUX) {
             Native.free(Pointer.nativeValue(posix_spawn_file_actions));
             Native.free(Pointer.nativeValue(posix_spawnattr));
+         }
+
+         if (cwd != null && IS_MAC) {
+           int rc = LibC.SYSCALL.syscall(LibC.SYS___pthread_chdir, cwd);
+           checkReturnCode(rc, "Internal call to syscall(SYS__pthread_chdir) failed");
+           Native.free(Pointer.nativeValue(cwd));
+           cwd = null;
          }
       }
 

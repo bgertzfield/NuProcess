@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Brett Wooldridge
+ * Copyright (C) 2015 Ben Hamilton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,23 @@
 
 package com.zaxxer.nuprocess;
 
-import java.util.List;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.InitializationError;
 
-import java.nio.file.Path;
-
-/**
- * <b>This is an internal class.</b>  Instances of this interface create and start processes
- * in a platform-specific fashion.  
- *
- * @author Brett Wooldridge
- */
-public interface NuProcessFactory
+public class RunOnlyOnMac extends BlockJUnit4ClassRunner
 {
-  NuProcess createProcess(List<String> commands, String[] env, NuProcessHandler processListener, Path directory);
+    public RunOnlyOnMac(Class<?> klass) throws InitializationError
+    {
+        super(klass);
+    }
+
+    @Override
+    public void run(RunNotifier notifier)
+    {
+        if (System.getProperty("os.name").toLowerCase().contains("mac"))
+        {
+            super.run(notifier);
+        }
+    }
 }

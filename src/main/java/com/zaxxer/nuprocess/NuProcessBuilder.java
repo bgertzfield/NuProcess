@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import java.nio.file.Path;
+
 /**
  * This class is used to create operating system processes.
  * <p>
@@ -53,6 +55,7 @@ public class NuProcessBuilder
    private final List<String> command;
    private final TreeMap<String, String> environment;
    private NuProcessHandler processListener;
+   private Path directory;
 
    static {
       String factoryClassName = null;
@@ -98,6 +101,7 @@ public class NuProcessBuilder
 
       this.environment = new TreeMap<String, String>(environment);
       this.command = new ArrayList<String>(commands);
+      this.directory = null;
    }
 
    /**
@@ -114,6 +118,7 @@ public class NuProcessBuilder
 
       this.environment = new TreeMap<String, String>(System.getenv());
       this.command = new ArrayList<String>(commands);
+      this.directory = null;
    }
 
    /**
@@ -130,6 +135,7 @@ public class NuProcessBuilder
 
       this.environment = new TreeMap<String, String>(System.getenv());
       this.command = new ArrayList<String>(Arrays.asList(commands));
+      this.directory = null;
    }
 
    /**
@@ -207,6 +213,17 @@ public class NuProcessBuilder
    }
 
    /**
+    * Set the current working directory of the subsequent launch of a
+    * {@link NuProcess} when calling the {@link #start()} method.
+    *
+    * @param path {@link Path} to the working directory to use
+    */
+   public void setDirectory(Path directory)
+   {
+      this.directory = directory;
+   }
+
+   /**
     * Spawn the child process with the configured commands, environment, and {@link NuProcessHandler}.
     *
     * @return a {@link NuProcess} instance or {@code null} if there is an immediately detectable launch failure
@@ -223,6 +240,6 @@ public class NuProcessBuilder
          env[i++] = entrySet.getKey() + "=" + entrySet.getValue();
       }
 
-      return factory.createProcess(command, env, processListener);
+      return factory.createProcess(command, env, processListener, directory);
    }
 }

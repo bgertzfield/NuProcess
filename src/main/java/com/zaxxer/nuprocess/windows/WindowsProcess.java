@@ -17,6 +17,7 @@
 package com.zaxxer.nuprocess.windows;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -220,7 +221,7 @@ public final class WindowsProcess implements NuProcess
    //                          Package-scoped methods
    // ************************************************************************
 
-   NuProcess start(List<String> commands, String[] environment)
+   NuProcess start(List<String> commands, String[] environment, Path directory)
    {
       callPreStart();
       
@@ -242,8 +243,15 @@ public final class WindowsProcess implements NuProcess
          processInfo = new PROCESS_INFORMATION();
 
          DWORD dwCreationFlags = new DWORD(WinNT.CREATE_NO_WINDOW | WinNT.CREATE_UNICODE_ENVIRONMENT | WinNT.CREATE_SUSPENDED);
+         String lpCurrentDirectory;
+         if (directory == null) {
+           lpCurrentDirectory = null;
+         } else {
+           lpCurrentDirectory = directory.toAbsolutePath().toString();
+         }
+
          if (!NuKernel32.CreateProcessW(null, getCommandLine(commands), null /*lpProcessAttributes*/, null /*lpThreadAttributes*/, true /*bInheritHandles*/,
-                                        dwCreationFlags, env, null /*lpCurrentDirectory*/, startupInfo, processInfo)) {
+                                        dwCreationFlags, env, lpCurrentDirectory, startupInfo, processInfo)) {
             int lastError = Native.getLastError();
             throw new RuntimeException("CreateProcessW() failed, error: " + lastError);
          }
