@@ -160,7 +160,7 @@ Charles Duffy has developed a Clojure wrapper library [here](https://github.com/
 #### Limitations
 The following limitations exist in NuProcess:
  * Currently only supports Linux, Windows, and MacOS X.
- * The provided library has only been fully tested on Java 7, but it builds under Java 6.
+ * The library requires the Java 7 runtime.
  * Linux support requires at least kernel version 2.6.17 or higher (kernels after June 2006)
- * Unlike ``java.lang.Process``, NuProcess does not currently permit setting an alternate current working directory (cwd) for the child process.
+
 
